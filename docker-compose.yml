@@ -1,0 +1,16 @@
+# Docker Compose 파일 버전 정의
+version: '3.8'
+
+# 실행할 서비스(컨테이너)들 정의
+services:
+  # 'redis'라는 이름의 서비스 정의
+  redis:
+    # 'redis:alpine' 이미지를 사용하여 컨테이너 생성 (가벼운 버전)
+    image: redis:alpine
+    # 컨테이너 이름을 'redis-sandbox'로 고정
+    container_name: redis-sandbox
+    # 호스트(내 PC)의 6379 포트를 컨테이너의 6379 포트와 연결
+    ports:
+      - '6379:6379'
+    # 컨테이너가 항상 재시작되도록 설정 (PC 재부팅 시 등)
+    restart: always
