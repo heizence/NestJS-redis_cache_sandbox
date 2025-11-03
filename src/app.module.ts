@@ -1,11 +1,9 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { CacheModule } from '@nestjs/cache-manager';
-import { StocksModule } from './stocks/stocks.module';
-
-import { Stock } from './stocks/stocks.entity';
 import { ConfigModule } from '@nestjs/config'; // NestJS 설정 모듈
-import { RedisConfigService } from './config/redis.config';
+import { RedisModule } from './redis/redis.module';
+import { StocksModule } from './stocks/stocks.module';
+import { Stock } from './stocks/stocks.entity';
 
 @Module({
   imports: [
@@ -23,15 +21,7 @@ import { RedisConfigService } from './config/redis.config';
       // [개발용] 애플리케이션 실행 시 엔티티 정의에 맞춰 DB 스키마를 자동으로 생성/변경
       synchronize: true,
     }),
-
-    // 캐시 모듈을 설정합니다.
-    CacheModule.register({
-      // isGlobal: true로 설정하여, StocksModule 등 다른 모듈에서
-      // 별도 import 없이 `CACHE_MANAGER`를 바로 주입(Inject)받을 수 있게 한다
-      useClass: RedisConfigService,
-      isGlobal: true,
-    }),
-
+    RedisModule,
     StocksModule,
   ],
 

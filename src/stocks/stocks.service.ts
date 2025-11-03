@@ -1,9 +1,8 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Stock } from './stocks.entity';
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Cache } from 'cache-manager';
+import { RedisService } from 'src/redis/redis.service';
 
 // @Injectable() 데코레이터로 이 클래스를 NestJS의 DI 시스템에 등록
 @Injectable()
@@ -14,8 +13,7 @@ export class StocksService {
     // 이 'stocksRepository'를 통해 DB(SQLite)와 통신한다.
     @InjectRepository(Stock)
     private readonly stocksRepository: Repository<Stock>,
-
-    @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    private readonly redisService: RedisService, // 전역 Redis 인스턴스 주입
   ) {}
 
   private getCacheKey(ticker: string) {
@@ -67,7 +65,7 @@ export class StocksService {
 
     // Redis 캐시 조회
     const cacheKey = this.getCacheKey(ticker);
-    const cachedStock = await this.cacheManager.get<Stock>(cacheKey);
+    const cachedStock = await this.redisService.get<Stock>(cacheKey);
     console.log('[service]check cache key : ', cacheKey);
     console.log('[service]check cache stock : ', cachedStock);
 
@@ -83,7 +81,7 @@ export class StocksService {
     console.log('[service]getStocks from db. stocks : ', stock);
 
     if (stock) {
-      await this.cacheManager.set(cacheKey, { ...stock }, 60 * 1000);
+      await this.redisService.set(cacheKey, { ...stock }, 60 * 1000);
       console.log('[service]save stock to cache');
       return stock;
     } else {
@@ -99,7 +97,7 @@ export class StocksService {
     stock.price = price;
 
     const updatedStock = await this.stocksRepository.save(stock);
-    await this.cacheManager.set(
+    await this.redisService.set(
       this.getCacheKey(ticker),
       { ...updatedStock },
       60 * 1000,
